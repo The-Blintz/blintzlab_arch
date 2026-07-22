@@ -4,7 +4,12 @@ set -euo pipefail
 # Lanzador de Blintzlab Installer
 # Extrae el repositorio comprimido y ejecuta el instalador con acceso a la terminal.
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Asegurar ejecución con Bash
+if [ -z "${BASH_VERSION:-}" ]; then
+    exec bash "$0" "$@"
+fi
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
 
 # Suponemos que el repositorio comprimido se encuentra en el mismo directorio
 ARCHIVE="${SCRIPT_DIR}/blintzlab-repo.tar.gz"
