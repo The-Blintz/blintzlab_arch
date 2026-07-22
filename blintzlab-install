@@ -23,11 +23,53 @@ main() {
     exec </dev/tty
 
     info "Bienvenido a Blintzlab Installer"
-    # ... otras fases (particionado, etc.) ...
-    # Llamar a selección de entorno
+
+    # 1. Configuración de idioma
+    source "$SCRIPT_DIR/lib/lang"
+    lang_config
+
+    # 2. Zona horaria y teclado
+    source "$SCRIPT_DIR/lib/zoneinfo"
+    locality
+    source "$SCRIPT_DIR/lib/list_X11keymap"
+    list_X11keymap
+
+    # 3. Particionado de discos
+    source "$SCRIPT_DIR/lib/disks"
+    disksystem
+
+    # 4. Instalación de sistema base y kernel
+    source "$SCRIPT_DIR/lib/install"
+    install
+    source "$SCRIPT_DIR/lib/installkernel"
+    installkernel
+
+    # 5. Configuración de usuario y permisos
+    source "$SCRIPT_DIR/lib/user"
+    users
+
+    # 6. Selección de shell y drivers de video
+    source "$SCRIPT_DIR/lib/shellsystem"
+    shellsystem
+    source "$SCRIPT_DIR/lib/video"
+    drivervideo
+
+    # 7. Instalación del cargador de arranque (GRUB)
+    source "$SCRIPT_DIR/lib/installgrub"
+    installgrub
+
+    # 8. Entorno de escritorio y tema Blintzlab
     source "$SCRIPT_DIR/lib/environment/main.sh"
     select_environment
-    success "Instalación completada."
+
+    # 9. Paquetes extra y finalización
+    source "$SCRIPT_DIR/lib/extras"
+    extraprogram
+    source "$SCRIPT_DIR/lib/installextras"
+    extrasinstall
+
+    success "Instalación completada. El sistema se reiniciará."
+    reboot
 }
 
 main "$@"
