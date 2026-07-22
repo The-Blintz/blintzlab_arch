@@ -26,7 +26,7 @@ main() {
 
     # 1. Configuración de idioma
     source "$SCRIPT_DIR/lib/lang"
-    lang_config
+    lang
 
     # 2. Zona horaria y teclado
     source "$SCRIPT_DIR/lib/zoneinfo"

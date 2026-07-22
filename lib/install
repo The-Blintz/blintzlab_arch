@@ -1,5 +1,14 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Asegurar ejecución con Bash
+if [ -z "${BASH_VERSION:-}" ]; then
+    exec bash "$0" "$@"
+fi
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
 #rmmod floppy
+# Directorio del script definido correctamente
 ###########################################
 ####### FUNCION DE BARRA ##################
 ###########################################
@@ -299,7 +308,8 @@ arch-chroot /mnt /bin/bash -c "pacman -Syu --noconfirm"
 echo ""
 echo " Agregando Repositorio de Arcris :"
 echo ""
-cp pacman.conf /mnt/etc/pacman.conf
+cp "$SCRIPT_DIR/../pacman.conf" /mnt/etc/pacman.conf
+# Repositorio de Arcris agregado
 arch-chroot /mnt /bin/bash -c "pacman -Syu --noconfirm"
 arch-chroot /mnt /bin/bash -c "pacman -Syu --noconfirm"
 clear
@@ -471,7 +481,8 @@ echo ""
 echo "Quitando repo cristo:"
 echo ""
 sleep 4
-cp pacman-chroot.conf /mnt/etc/pacman.conf
+cp "$SCRIPT_DIR/../pacman-chroot.conf" /mnt/etc/pacman.conf
+# Repositorio cristo eliminado
 arch-chroot /mnt /bin/bash -c "pacman -Syu --noconfirm" 
 arch-chroot /mnt /bin/bash -c "pacman -Syu --noconfirm" 
 clear
