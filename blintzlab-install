@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Blintzlab Installer
+# Versión 2.0
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Cargar funciones comunes
+source "$SCRIPT_DIR/lib/common.sh"
+
+# Variables globales
+NEW_USER="${NEW_USER:-blintz}"  # Por defecto
+
+# Función principal
+main() {
+    info "Bienvenido a Blintzlab Installer"
+    # ... otras fases (particionado, etc.) ...
+    # Llamar a selección de entorno
+    source "$SCRIPT_DIR/lib/environment/main.sh"
+    select_environment
+    success "Instalación completada."
+}
+
+main "$@"
