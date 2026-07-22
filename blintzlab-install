@@ -14,6 +14,9 @@ NEW_USER="${NEW_USER:-blintz}"  # Por defecto
 
 # Función principal
 main() {
+    # Asegurar entrada desde la terminal incluso si se ejecuta vía pipe
+    exec </dev/tty
+
     info "Bienvenido a Blintzlab Installer"
     # ... otras fases (particionado, etc.) ...
     # Llamar a selección de entorno

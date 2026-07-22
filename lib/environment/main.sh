@@ -28,7 +28,7 @@ select_environment() {
         echo "2) Hyprland Vanilla"
         echo "3) Blintzlab Premium (Hyprland)"
         echo "4) Omitir / Solo Consola"
-        read -r choice
+        read -r choice </dev/tty
     fi
 
     case "$choice" in
