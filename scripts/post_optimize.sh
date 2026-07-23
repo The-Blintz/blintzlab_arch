@@ -8,7 +8,7 @@ echo "[arcris] Applying kernel memory optimizations..."
 
 SYSCTL_FILE="/etc/sysctl.d/99-arcris-memory-optimization.conf"
 if [ -f "$SYSCTL_FILE" ]; then
-    sysctl -p "$SYSCTL_FILE"
+    sysctl -p "$SYSCTL_FILE" 2>/dev/null || true
     echo "[arcris] Memory sysctl applied: $SYSCTL_FILE"
 else
     echo "[arcris] WARNING: $SYSCTL_FILE not found"
@@ -21,6 +21,20 @@ systemctl start systemd-zram-setup@zram0.service 2>/dev/null || true
 echo "[arcris] Enabling periodic TRIM for SSDs..."
 systemctl enable fstrim.timer 2>/dev/null || true
 systemctl start fstrim.timer 2>/dev/null || true
+
+echo "[arcris] Enabling NetworkManager..."
+systemctl enable NetworkManager.service 2>/dev/null || true
+
+echo "[arcris] Enabling Bluetooth..."
+systemctl enable bluetooth.service 2>/dev/null || true
+
+echo "[arcris] Enabling audio (PipeWire)..."
+systemctl enable pipewire.service 2>/dev/null || true
+systemctl enable pipewire-pulse.service 2>/dev/null || true
+systemctl enable wireplumber.service 2>/dev/null || true
+
+echo "[arcris] Enabling SSH..."
+systemctl enable sshd.service 2>/dev/null || true
 
 # Create disk swap if the script exists
 if [ -f /opt/arcris/scripts/create-swap.sh ]; then

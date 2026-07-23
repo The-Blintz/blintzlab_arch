@@ -44,7 +44,10 @@ class ArcrisInstaller:
         self.device_mod = None
         self.disk_config = None
         self.hostname = "arcris"
-        self.locale_config = LocaleConfiguration.default()
+        self.locale_config = LocaleConfiguration(
+            kb_layout="us",
+            locales=["en_US.UTF-8"],
+        )
         self.timezone = "UTC"
         self.kernels = ["linux"]
         self.users: list[User] = []
@@ -57,7 +60,7 @@ class ArcrisInstaller:
         self.swap_enabled = True
         self.swap_zram_algo = ZramAlgorithm.ZSTD
         self.packages: list[str] = []
-        self.services: list[str] = []
+        self.services: list[str] = ["NetworkManager"]
         self.use_disk_swap = True
         self.use_btrfs = False
 
@@ -94,6 +97,7 @@ class ArcrisInstaller:
 
         fs_type = FilesystemType("btrfs") if self.use_btrfs else self.fs_type
         sector_size = self.device.device_info.sector_size
+        total_sectors = self.device.device_info.total_size
 
         device_mod = DeviceModification(self.device, wipe=wipe)
 
@@ -131,19 +135,23 @@ class ArcrisInstaller:
             type=PartitionType.PRIMARY,
             start=next_start,
             length=Size(root_gb, Unit.GiB, sector_size),
-            mountpoint=None,
+            mountpoint=Path("/"),
             fs_type=fs_type,
         )
         device_mod.add_partition(root_partition)
 
         if home_uses_rest:
-            start_home = root_partition.length
-            length_home = self.device.device_info.total_size - start_home
+            used_sectors = (
+                boot_partition.length + root_partition.length
+                + (Size(swap_mb, Unit.MiB, sector_size) if swap_mb > 0 else Size(0, Unit.MiB, sector_size))
+            )
+            home_length = total_sectors - used_sectors
+
             home_partition = PartitionModification(
                 status=ModificationStatus.CREATE,
                 type=PartitionType.PRIMARY,
-                start=start_home,
-                length=length_home,
+                start=used_sectors,
+                length=home_length,
                 mountpoint=Path("/home"),
                 fs_type=fs_type,
             )
@@ -157,16 +165,18 @@ class ArcrisInstaller:
         )
 
         if self.encryption_password:
+            partitions_to_encrypt = [root_partition]
+            if home_uses_rest:
+                partitions_to_encrypt.append(home_partition)
+
             disk_config.disk_encryption = DiskEncryption(
                 encryption_password=Password(plaintext=self.encryption_password),
                 encryption_type=EncryptionType.LUKS,
-                partitions=[root_partition] + (
-                    [home_partition] if home_uses_rest else []
-                ),
+                partitions=partitions_to_encrypt,
             )
 
         self.disk_config = disk_config
-        self._root_part = root_partition
+        self._root_partition = root_partition
 
     def run_filesystem_operations(self) -> bool:
         if self.disk_config is None:
@@ -176,14 +186,15 @@ class ArcrisInstaller:
         try:
             fs_handler.perform_filesystem_operations()
             return True
-        except Exception:
+        except Exception as e:
+            print(f"[arcris] Filesystem operations failed: {e}")
             return False
 
     def run_installation(self, progress_callback=None) -> bool:
         if self.disk_config is None:
             raise ValueError("Disk config not set. Call configure_disk_layout() first.")
 
-        total_steps = 12
+        total_steps = 14
         current_step = [0]
 
         def progress_step(label: str):
@@ -191,117 +202,132 @@ class ArcrisInstaller:
             if progress_callback:
                 progress_callback(current_step[0], total_steps, label)
 
-        progress_step("Mounting filesystems")
+        try:
+            progress_step("Mounting filesystems")
 
-        with Installer(
-            self.mountpoint,
-            self.disk_config,
-            kernels=self.kernels,
-        ) as installation:
-            progress_step("Ordered mount")
+            with Installer(
+                self.mountpoint,
+                self.disk_config,
+                kernels=self.kernels,
+            ) as installation:
+                progress_step("Ordered mount")
 
-            installation.mount_ordered_layout()
-            installation.sanity_check()
+                installation.mount_ordered_layout()
+                installation.sanity_check()
 
-            if self.disk_config.disk_encryption and self.disk_config.disk_encryption.encryption_type != EncryptionType.NO_ENCRYPTION:
-                installation.generate_key_files()
+                if self.disk_config.disk_encryption and self.disk_config.disk_encryption.encryption_type != EncryptionType.NO_ENCRYPTION:
+                    installation.generate_key_files()
 
-            progress_step("Base installation (pacstrap)")
+                progress_step("Base installation (pacstrap)")
 
-            installation.minimal_installation(
-                hostname=self.hostname,
-                locale_config=self.locale_config,
-            )
+                installation.minimal_installation(
+                    hostname=self.hostname,
+                    locale_config=self.locale_config,
+                )
 
-            progress_step("Configuring mirrors")
+                progress_step("Configuring mirrors")
 
-            progress_step("Configuring hybrid swap")
+                progress_step("Configuring hybrid swap")
 
-            if self.swap_enabled:
-                from src.swap_manager import setup_swap_in_archinstall
-                ram_mb = detect_total_ram_mb()
-                setup_swap_in_archinstall(installation, total_ram_mb=ram_mb)
+                if self.swap_enabled:
+                    from src.swap_manager import setup_swap_in_archinstall
+                    ram_mb = detect_total_ram_mb()
+                    setup_swap_in_archinstall(installation, total_ram_mb=ram_mb)
 
-            progress_step("Installing bootloader")
+                progress_step("Installing bootloader")
 
-            installation.add_bootloader(self.bootloader)
+                installation.add_bootloader(self.bootloader)
 
-            progress_step("Creating users")
+                progress_step("Creating users")
 
-            if self.users:
-                installation.create_users(self.users)
+                if self.users:
+                    installation.create_users(self.users)
 
-            if self.root_password:
-                root_user = User("root", self.root_password, False)
-                installation.set_user_password(root_user)
+                if self.root_password:
+                    root_user = User("root", self.root_password, False)
+                    installation.set_user_password(root_user)
 
-            progress_step("Installing desktop profile")
+                progress_step("Installing desktop profile")
 
-            if self.desktop_profile:
-                self._install_desktop_profile(installation)
+                if self.desktop_profile:
+                    self._install_desktop_profile(installation)
 
-            progress_step("Additional packages")
+                progress_step("Additional packages")
 
-            if self.packages:
-                installation.add_additional_packages(self.packages)
+                if self.packages:
+                    installation.add_additional_packages(self.packages)
 
-            progress_step("Timezone")
+                progress_step("Timezone")
 
-            installation.set_timezone(self.timezone)
-            installation.activate_time_synchronization()
+                installation.set_timezone(self.timezone)
+                installation.activate_time_synchronization()
 
-            progress_step("Enabling services")
+                progress_step("Enabling services")
 
-            if self.services:
-                installation.enable_service(self.services)
+                for svc in self.services:
+                    installation.enable_service(svc)
 
-            progress_step("Generating fstab")
+                progress_step("Generating fstab")
 
-            installation.genfstab()
+                installation.genfstab()
 
-            progress_step("Post-install optimizations")
+                progress_step("Generating initramfs")
 
-            self._apply_post_install_scripts(installation)
+                installation.mkinitcpio("-P")
 
-            progress_step("Done")
+                progress_step("Post-install optimizations")
 
-            return True
+                self._apply_post_install_scripts(installation)
+
+                progress_step("Done")
+
+                return True
+
+        except Exception as e:
+            print(f"[arcris] Installation failed: {e}")
+            import traceback
+            traceback.print_exc()
+            return False
 
     def _install_desktop_profile(self, installation) -> None:
-        profile_map = {
-            "kde": "archinstall.default_profiles.desktop.KdeProfile",
-            "gnome": "archinstall.default_profiles.desktop.GnomeProfile",
-            "xfce": "archinstall.default_profiles.desktop.XFCEProfile",
-            "cinnamon": "archinstall.default_profiles.desktop.CinnamonProfile",
-        }
-
-        if self.desktop_profile in profile_map:
+        try:
             profile = profile_handler.get_profile_by_name(self.desktop_profile)
             if profile is None:
-                from archinstall.default_profiles.desktop import (
-                    KdeProfile,
-                )
+                from archinstall.default_profiles.desktop import KdeProfile
                 profile = KdeProfile()
-        else:
-            from archinstall.default_profiles.minimal import MinimalProfile
-            profile = MinimalProfile()
 
-        profile_config = ProfileConfiguration(profile)
-        profile_handler.install_profile_config(installation, profile_config)
+            profile_config = ProfileConfiguration(profile)
+            profile_handler.install_profile_config(installation, profile_config)
 
-        if self.users:
-            profile.post_install(installation)
-            profile.provision(installation, self.users)
+            if self.users:
+                try:
+                    profile.post_install(installation)
+                except (AttributeError, TypeError):
+                    pass
+                try:
+                    profile.provision(installation, self.users)
+                except (AttributeError, TypeError):
+                    pass
+
+        except Exception as e:
+            print(f"[arcris] Desktop profile installation failed: {e}")
+            print(f"[arcris] Falling back to minimal profile installation")
+            try:
+                from archinstall.default_profiles.minimal import MinimalProfile
+                profile = MinimalProfile()
+                profile_config = ProfileConfiguration(profile)
+                profile_handler.install_profile_config(installation, profile_config)
+            except Exception as e2:
+                print(f"[arcris] Minimal profile also failed: {e2}")
 
     def _apply_post_install_scripts(self, installation) -> None:
         scripts_dir = Path(__file__).parent.parent / "scripts"
         for script_path in sorted(scripts_dir.glob("*.sh")):
-            if script_path.name.startswith("post_"):
-                dest = installation.target / "opt/arcris/scripts" / script_path.name
-                dest.parent.mkdir(parents=True, exist_ok=True)
-                import shutil
-                shutil.copy(script_path, dest)
-                dest.chmod(0o755)
+            dest = installation.target / "opt/arcris/scripts" / script_path.name
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            import shutil
+            shutil.copy(script_path, dest)
+            dest.chmod(0o755)
 
     def add_user(self, name: str, password_plaintext: str, sudo: bool = True) -> None:
         self.users.append(User(name, Password(plaintext=password_plaintext), sudo))

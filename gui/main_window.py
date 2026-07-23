@@ -442,6 +442,11 @@ class DiskPage(QWizardPage):
         self.home_rest.setChecked(True)
         form.addRow("", self.home_rest)
 
+        self.fs_combo = QComboBox()
+        self.fs_combo.addItems(["ext4", "btrfs", "xfs"])
+        self.fs_combo.setCurrentText("ext4")
+        form.addRow("Filesystem:", self.fs_combo)
+
         layout.addLayout(form)
         layout.addStretch()
 
@@ -831,6 +836,7 @@ class SummaryPage(QWizardPage):
             lines.append(f"Boot:     {disk_page.boot_size.value()} MB")
             lines.append(f"Root:     {disk_page.root_size.value()} GB")
             lines.append(f"Home:     {'Remaining space' if disk_page.home_rest.isChecked() else 'No /home partition'}")
+            lines.append(f"FS:       {disk_page.fs_combo.currentText()}")
             lines.append(f"Wipe:     {'Yes' if disk_page.wipe_check.isChecked() else 'No'}")
 
         swap_page = wizard.page(2)
@@ -918,7 +924,15 @@ class InstallPage(QWizardPage):
 
     def _start_install(self):
         wizard = cast(InstallerWizard, self.wizard())
-        installer = self._build_installer(wizard)
+        try:
+            installer = self._build_installer(wizard)
+        except Exception as e:
+            self._on_log(f"FATAL: Failed to configure installer: {e}")
+            self.status_label.setText(f"Error: {e}")
+            self.status_label.setStyleSheet("color: #ff5252; font-weight: bold;")
+            self._finished = True
+            self.wizard().button(QWizard.WizardButton.NextButton).setEnabled(True)
+            return
 
         self.worker = InstallWorker(installer)
         self.worker.progress.connect(self._on_progress)
@@ -936,8 +950,18 @@ class InstallPage(QWizardPage):
         user_p = cast(UserPage, wizard.page(4))
         prof_p = cast(ProfilePage, wizard.page(5))
 
-        installer.set_device(disk_p.get_selected_device())
-        installer.use_btrfs = True
+        device_path = disk_p.get_selected_device()
+        if not device_path:
+            raise ValueError("No disk selected")
+        if not installer.set_device(device_path):
+            raise ValueError(f"Could not access device: {device_path}")
+
+        fs_text = disk_p.fs_combo.currentText()
+        installer.use_btrfs = (fs_text == "btrfs")
+        if fs_text == "xfs":
+            from archinstall.lib.models.device import FilesystemType
+            installer.fs_type = FilesystemType("xfs")
+
         installer.configure_disk_layout(
             boot_mb=disk_p.boot_size.value(),
             root_gb=disk_p.root_size.value(),
@@ -950,17 +974,20 @@ class InstallPage(QWizardPage):
 
         installer.swap_enabled = swap_p.enable_zram.isChecked()
         installer.use_disk_swap = swap_p.enable_disk_swap.isChecked()
-        # Pass ZRAM algorithm and size percentage to swap manager
+
         ram_mb = detect_total_ram_mb()
         installer.swap_zram_algo = swap_p.zram_algo.currentText()
         installer.swap_size_mb = int(ram_mb * swap_p.zram_percent.value() / 100)
 
-        installer.add_user(
-            user_p.username_input.text().strip(),
-            user_p.pass_input.text(),
-            sudo=user_p.sudo_check.isChecked(),
-        )
-        installer.hostname = user_p.hostname_input.text().strip()
+        username = user_p.username_input.text().strip()
+        password = user_p.pass_input.text()
+        if username and password:
+            installer.add_user(
+                username,
+                password,
+                sudo=user_p.sudo_check.isChecked(),
+            )
+        installer.hostname = user_p.hostname_input.text().strip() or "arcris"
 
         if user_p.root_pass.text():
             from archinstall.lib.models.users import Password
@@ -968,28 +995,22 @@ class InstallPage(QWizardPage):
 
         installer.desktop_profile = prof_p.profile_combo.currentText()
 
-        bl_map = {
-            "systemd-boot": "systemd",
-            "grub": "grub",
-            "limine": "limine",
-            "none": "none",
-        }
-        bl_name = bl_map.get(prof_p.bootloader_combo.currentText(), "systemd")
         from archinstall.lib.models.bootloader import Bootloader
-        if bl_name == "systemd":
-            installer.bootloader = Bootloader.SYSTEMD
-        elif bl_name == "grub":
+        bl_text = prof_p.bootloader_combo.currentText()
+        if bl_text == "grub":
             installer.bootloader = Bootloader.GRUB
-        elif bl_name == "limine":
+        elif bl_text == "limine":
             installer.bootloader = Bootloader.LIMINE
-        else:
+        elif bl_text == "none":
             installer.bootloader = Bootloader.NO_BOOTLOADER
+        else:
+            installer.bootloader = Bootloader.SYSTEMD
 
         installer.timezone = prof_p.timezone_combo.currentText()
 
         pkgs = prof_p.packages_edit.text().strip()
         if pkgs:
-            installer.packages = pkgs.split()
+            installer.packages = [p for p in pkgs.split() if p]
 
         return installer
 

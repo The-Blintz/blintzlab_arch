@@ -75,10 +75,11 @@ def write_zram_generator_config(target: Path, config: SwapConfig) -> None:
     zram_dir.mkdir(parents=True, exist_ok=True)
 
     conf_path = zram_dir / "zram-generator.conf"
-    # Use a valid zram-generator expression: min(ram / 2, 8192) for example
-    # We'll set max-zram-size and let the generator handle the rest.
+
+    # zram-generator uses min(ram / N, LIMIT) format
+    # For 50% of RAM capped at configured max
     conf_path.write_text(
-        f"[zram0]\n"
+        "[zram0]\n"
         f"zram-size = min(ram / 2, {config.zram_size_mb})\n"
         f"compression-algorithm = {config.zram_algorithm}\n"
         f"max-zram-size = {config.zram_size_mb}\n"
@@ -91,12 +92,15 @@ def write_sysctl_optimizations(target: Path, config: SwapConfig) -> None:
 
     conf = sysctl_dir / "99-arcris-memory-optimization.conf"
     conf.write_text(
+        f"# Arcris memory optimization\n"
+        f"# Aggressive ZRAM usage with low disk swap\n"
         f"vm.swappiness = {config.swappiness}\n"
         f"vm.vfs_cache_pressure = {config.vfs_cache_pressure}\n"
         f"vm.watermark_boost_factor = {config.watermark_boost_factor}\n"
         f"vm.dirty_bytes = {config.dirty_bytes}\n"
         f"vm.dirty_background_bytes = {config.dirty_background_bytes}\n"
         f"vm.page-cluster = 0\n"
+        f"vm.compact_memory = 1\n"
     )
 
 
@@ -113,8 +117,21 @@ SWAPSIZE_MB={swap_size_mb}
 
 echo "[arcris] Creating swap file: $SWAPFILE ($SWAPSIZE_MB MB)"
 
+# Only create if it doesn't already exist or is wrong size
+if [ -f "$SWAPFILE" ]; then
+    CURRENT_SIZE=$(stat -c%s "$SWAPFILE" 2>/dev/null || echo 0)
+    EXPECTED_SIZE=$((SWAPSIZE_MB * 1024 * 1024))
+    if [ "$CURRENT_SIZE" -eq "$EXPECTED_SIZE" ]; then
+        echo "[arcris] Swap file already exists with correct size"
+        if ! swapon --show | grep -q "$SWAPFILE"; then
+            swapon "$SWAPFILE"
+        fi
+        exit 0
+    fi
+fi
+
 truncate -s 0 "$SWAPFILE" 2>/dev/null || true
-fallocate -l "${{SWAPSIZE_MB}}M" "$SWAPFILE" 2>/dev/null || \
+fallocate -l "${{SWAPSIZE_MB}}M" "$SWAPFILE" 2>/dev/null || \\
     dd if=/dev/zero of="$SWAPFILE" bs=1M count="$SWAPSIZE_MB" status=progress
 
 chmod 0600 "$SWAPFILE"

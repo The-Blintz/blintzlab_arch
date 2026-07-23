@@ -26,6 +26,7 @@ class PostInstallConfigurator:
         self.configure_fonts_and_icons()
         self.configure_shortcuts()
         self.write_first_boot_service()
+        self.enable_services()
 
     def install_theme_packages(self) -> None:
         packages = [
@@ -44,10 +45,23 @@ class PostInstallConfigurator:
             "ttf-fira-code",
             "ttf-fira-sans",
             "inter-font",
-            "xf86-input-synaptics",
         ]
-        script = self._command_script(packages, "pacman -S --noconfirm")
+        script = self._command_script(packages, "pacman -S --noconfirm --needed")
         self._run_script(script)
+
+    def enable_services(self) -> None:
+        services = [
+            "sddm.service",
+            "NetworkManager.service",
+            "bluetooth.service",
+            "pipewire.service",
+            "pipewire-pulse.service",
+            "wireplumber.service",
+            "fstrim.timer",
+        ]
+        for svc in services:
+            script = f"#!/usr/bin/env bash\nset -euo pipefail\nsystemctl enable {svc}"
+            self._run_script(script)
 
     def configure_sddm(self) -> None:
         sddm_conf_dir = self.target / "etc/sddm.conf.d"
@@ -151,7 +165,7 @@ Rectangle {
             anchors.margins: 28
             spacing: 18
 
-          Label {
+            Label {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: textConstants.welcomeText.arg(sddm.hostName)
                 font.pixelSize: 12
@@ -473,7 +487,7 @@ animate_states=true
             "\n"
             "[Service]\n"
             "Type=oneshot\n"
-            "ExecStart=/opt/arcris/scripts/post_theme.sh\n"
+            "ExecStart=/opt/arcris/scripts/arcris-firstboot.sh\n"
             "User=%s\n"
             "Environment=DISPLAY=:0\n"
             "RemainAfterExit=yes\n"
