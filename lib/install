@@ -1,14 +1,5 @@
-#!/usr/bin/env bash
-set -euo pipefail
-
-# Asegurar ejecución con Bash
-if [ -z "${BASH_VERSION:-}" ]; then
-    exec bash "$0" "$@"
-fi
-
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+#!/bin/bash
 #rmmod floppy
-# Directorio del script definido correctamente
 ###########################################
 ####### FUNCION DE BARRA ##################
 ###########################################
@@ -308,8 +299,7 @@ arch-chroot /mnt /bin/bash -c "pacman -Syu --noconfirm"
 echo ""
 echo " Agregando Repositorio de Arcris :"
 echo ""
-cp "$SCRIPT_DIR/../pacman.conf" /mnt/etc/pacman.conf
-# Repositorio de Arcris agregado
+cp pacman.conf /mnt/etc/pacman.conf
 arch-chroot /mnt /bin/bash -c "pacman -Syu --noconfirm"
 arch-chroot /mnt /bin/bash -c "pacman -Syu --noconfirm"
 clear
@@ -481,14 +471,13 @@ echo ""
 echo "Quitando repo cristo:"
 echo ""
 sleep 4
-cp "$SCRIPT_DIR/../pacman-chroot.conf" /mnt/etc/pacman.conf
-# Repositorio cristo eliminado
+cp pacman-chroot.conf /mnt/etc/pacman.conf
 arch-chroot /mnt /bin/bash -c "pacman -Syu --noconfirm" 
 arch-chroot /mnt /bin/bash -c "pacman -Syu --noconfirm" 
 clear
-arch-chroot /mnt /bin/bash -c "systemctl enable dhcpcd NetworkManager"
+arch-chroot /mnt /bin/bash -c "systemctl enable NetworkManager.service"
 clear
-arch-chroot /mnt /bin/bash -c "systemctl start dhcpcd NetworkManager"
+arch-chroot /mnt /bin/bash -c "systemctl start NetworkManager.service"
 clear
 echo "noipv6rs" >> /mnt/etc/dhcpcd.conf
 echo "noipv6" >> /mnt/etc/dhcpcd.conf

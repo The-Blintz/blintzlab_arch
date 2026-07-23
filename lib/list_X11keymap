@@ -1,42 +1,99 @@
-#!/usr/bin/env bash
-set -euo pipefail
-
-# Asegurar ejecución con Bash
-if [ -z "${BASH_VERSION:-}" ]; then
-    exec bash "$0" "$@"
+af
+al
+am
+ara
+at
+au
+az
+ba
+bd
+be
+bg
+br
+brai
+bt
+bw
+by
+ca
+cd
+ch
+cm
+cn
+cz
+de
+dk
+dz
+ee
+epo
+es
+et
 fi
-
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
-source "$SCRIPT_DIR/../common.sh"
-
-# Lista de mapas de teclado X11 disponibles
-X11_KEYMAPS=(
-    af al am ara at au az ba bd be bg br brai bt bw by ca cd ch cm cn cz de dk dz ee epo es et fi fo fr gb ge gh gn gr hr hu id ie il in iq ir is it jp jv ke kg kh kr kz la latam lk lt lv ma mao md me mk ml mm mn mt mv my nec_vndr/jp ng nl no np ph pk pl pt ro rs ru se si sk sn sy tg th tj tm tr tw tz ua us uz vn za
-)
-
-list_X11keymap() {
-    local choice
-    if command -v whiptail &>/dev/null; then
-        choice=$(whiptail --title "Blintzlab - Mapa de Teclado X11" \
-            --menu "Selecciona el mapa de teclado para X11:" 20 60 10 \
-            $(for k in "${X11_KEYMAPS[@]}"; do echo "$k" "$k"; done) \
-            3>&1 1>&2 2>&3)
-    elif command -v dialog &>/dev/null; then
-        choice=$(dialog --title "Blintzlab - Mapa de Teclado X11" \
-            --menu "Selecciona el mapa de teclado para X11:" 20 60 10 \
-            $(for k in "${X11_KEYMAPS[@]}"; do echo "$k" "$k"; done) \
-            3>&1 1>&2 2>&3)
-    else
-        echo "Mapas de teclado disponibles:"
-        for k in "${X11_KEYMAPS[@]}"; do echo "$k"; done
-        read -r -p "Introduce el código del mapa de teclado: " choice </dev/tty
-    fi
-
-    if [[ -n "$choice" ]]; then
-        keymapx="$choice"
-        info "Mapa de teclado X11 seleccionado: $keymapx"
-    else
-        warn "No se seleccionó mapa de teclado. Se usará 'us' por defecto."
-        keymapx="us"
-    fi
-}
+fo
+fr
+gb
+ge
+gh
+gn
+gr
+hr
+hu
+id
+ie
+il
+in
+iq
+ir
+is
+it
+jp
+jv
+ke
+kg
+kh
+kr
+kz
+la
+latam
+lk
+lt
+lv
+ma
+mao
+md
+me
+mk
+ml
+mm
+mn
+mt
+mv
+my
+nec_vndr/jp
+ng
+nl
+no
+np
+ph
+pk
+pl
+pt
+ro
+rs
+ru
+se
+si
+sk
+sn
+sy
+tg
+th
+tj
+tm
+tr
+tw
+tz
+ua
+us
+uz
+vn
+za
