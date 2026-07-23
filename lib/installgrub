@@ -27,8 +27,7 @@ arch-chroot /mnt /bin/bash -c 'grub-install --target=x86_64-efi --efi-directory=
 sed -i '6iGRUB_CMDLINE_LINUX_DEFAULT="loglevel=3"' /mnt/etc/default/grub
 sed -i '7d' /mnt/etc/default/grub
 ######
-sed -i 's/^#\?GRUB_DISABLE_OS_PROBER=.*/GRUB_DISABLE_OS_PROBER=false/' /mnt/etc/default/grub
-echo "GRUB_DISABLE_OS_PROBER=false" >> /mnt/etc/default/grub
+echo "GRUB_DISABLE_OS_PROBER=false" >>  /mnt/etc/default/grub
 arch-chroot /mnt /bin/bash -c "grub-mkconfig -o /boot/grub/grub.cfg"
 echo '' 
 echo 'ls -l /mnt/boot' 
@@ -58,8 +57,7 @@ arch-chroot /mnt /bin/bash -c "grub-install --target=i386-pc $disk"
 sed -i "6iGRUB_CMDLINE_LINUX_DEFAULT="loglevel=3"" /mnt/etc/default/grub
 sed -i '7d' /mnt/etc/default/grub
 ########
-sed -i 's/^#\?GRUB_DISABLE_OS_PROBER=.*/GRUB_DISABLE_OS_PROBER=false/' /mnt/etc/default/grub
-echo "GRUB_DISABLE_OS_PROBER=false" >> /mnt/etc/default/grub
+echo "GRUB_DISABLE_OS_PROBER=false" >>  /mnt/etc/default/grub
 arch-chroot /mnt /bin/bash -c "grub-mkconfig -o /boot/grub/grub.cfg"
 echo '' 
 echo 'ls -l /mnt/boot' 
@@ -89,7 +87,7 @@ if [ $uefi == 1 ] && [ -d /sys/firmware/efi ]; then
 clear
 titulo_progreso="| SU SISTEMA ES UEFI |"
 barra_progreso
-arch-chroot /mnt /bin/bash -c "pacman -S grub efibootmgr os-prober --noconfirm"
+arch-chroot /mnt /bin/bash -c "pacman -S grub efibootmgr os-prober ntfs-3g --noconfirm"
 clear
 echo ""
 echo '>>> Su disco es GPT | UEFI es el sistema Moderno <<<'
@@ -105,8 +103,7 @@ arch-chroot /mnt /bin/bash -c 'grub-install --target=x86_64-efi --efi-directory=
 sed -i '6iGRUB_CMDLINE_LINUX_DEFAULT="loglevel=3"' /mnt/etc/default/grub
 sed -i '7d' /mnt/etc/default/grub
 ######
-sed -i 's/^#\?GRUB_DISABLE_OS_PROBER=.*/GRUB_DISABLE_OS_PROBER=false/' /mnt/etc/default/grub
-echo "GRUB_DISABLE_OS_PROBER=false" >> /mnt/etc/default/grub
+echo "GRUB_DISABLE_OS_PROBER=false" >>  /mnt/etc/default/grub
 arch-chroot /mnt /bin/bash -c "grub-mkconfig -o /boot/grub/grub.cfg"
 echo '' 
 echo 'ls -l /mnt/boot' 
@@ -141,8 +138,7 @@ arch-chroot /mnt /bin/bash -c "grub-install --target=i386-pc $disk"
 sed -i "6iGRUB_CMDLINE_LINUX_DEFAULT="loglevel=3"" /mnt/etc/default/grub
 sed -i '7d' /mnt/etc/default/grub
 ########
-sed -i 's/^#\?GRUB_DISABLE_OS_PROBER=.*/GRUB_DISABLE_OS_PROBER=false/' /mnt/etc/default/grub
-echo "GRUB_DISABLE_OS_PROBER=false" >> /mnt/etc/default/grub
+echo "GRUB_DISABLE_OS_PROBER=false" >>  /mnt/etc/default/grub
 arch-chroot /mnt /bin/bash -c "grub-mkconfig -o /boot/grub/grub.cfg"
 echo '' 
 echo 'ls -l /mnt/boot' 
@@ -172,7 +168,7 @@ if [ $uefi == 1 ] && [ -d /sys/firmware/efi ]; then
 clear
 titulo_progreso="| SU SISTEMA ES UEFI |"
 barra_progreso
-arch-chroot /mnt /bin/bash -c "pacman -S grub efibootmgr os-prober --noconfirm"
+arch-chroot /mnt /bin/bash -c "pacman -S grub efibootmgr os-prober ntfs-3g --noconfirm"
 arch-chroot /mnt /bin/bash -c "pacman -S snapper --noconfirm" 
 arch-chroot /mnt /bin/bash -c "pacman -S grub-btrfs --noconfirm" 
 sed -i 's/MODULES=()/MODULES=(btrfs)/' /mnt/etc/mkinitcpio.conf
@@ -195,8 +191,7 @@ arch-chroot /mnt /bin/bash -c 'grub-install --target=x86_64-efi --efi-directory=
 sed -i '6iGRUB_CMDLINE_LINUX_DEFAULT="loglevel=3"' /mnt/etc/default/grub
 sed -i '7d' /mnt/etc/default/grub
 ######
-sed -i 's/^#\?GRUB_DISABLE_OS_PROBER=.*/GRUB_DISABLE_OS_PROBER=false/' /mnt/etc/default/grub
-echo "GRUB_DISABLE_OS_PROBER=false" >> /mnt/etc/default/grub
+echo "GRUB_DISABLE_OS_PROBER=false" >>  /mnt/etc/default/grub
 arch-chroot /mnt /bin/bash -c "grub-mkconfig -o /boot/grub/grub.cfg"
 echo '' 
 ######################################################
@@ -276,7 +271,7 @@ else
 clear
 titulo_progreso="|  SISTEMA BIOS LEGACY Y DISCO DOS/MBR  |"
 barra_progreso
-arch-chroot /mnt /bin/bash -c "pacman -S grub os-prober --noconfirm"
+arch-chroot /mnt /bin/bash -c "pacman -S grub os-prober ntfs-3g --noconfirm"
 clear
 echo "" 
 echo '>>> Su disco es DOS MBR | BIOS Legacy es un sistema antiguo <<<' 
@@ -289,8 +284,7 @@ arch-chroot /mnt /bin/bash -c "grub-install --target=i386-pc $disk"
 sed -i "6iGRUB_CMDLINE_LINUX_DEFAULT="loglevel=3"" /mnt/etc/default/grub
 sed -i '7d' /mnt/etc/default/grub
 ########
-sed -i 's/^#\?GRUB_DISABLE_OS_PROBER=.*/GRUB_DISABLE_OS_PROBER=false/' /mnt/etc/default/grub
-echo "GRUB_DISABLE_OS_PROBER=false" >> /mnt/etc/default/grub
+echo "GRUB_DISABLE_OS_PROBER=false" >>  /mnt/etc/default/grub
 arch-chroot /mnt /bin/bash -c "grub-mkconfig -o /boot/grub/grub.cfg"
 echo '' 
 echo 'ls -l /mnt/boot' 

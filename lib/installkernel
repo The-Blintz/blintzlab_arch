@@ -69,8 +69,7 @@ arch-chroot /mnt /bin/bash -c "pacman -S tlp --noconfirm --needed"
 
 
 
-arch-chroot /mnt /bin/bash -c "mkinitcpio -P"
-arch-chroot /mnt /bin/bash -c "systemctl enable NetworkManager.service"
+arch-chroot /mnt /bin/bash -c "systemctl enable dhcpcd NetworkManager"
 
   ;;
 
@@ -134,8 +133,7 @@ arch-chroot /mnt /bin/bash -c "pacman -S firewalld --noconfirm --needed"
 arch-chroot /mnt /bin/bash -c "pacman -S sof-tools --noconfirm --needed"
 arch-chroot /mnt /bin/bash -c "pacman -S tlp --noconfirm --needed"
 
-arch-chroot /mnt /bin/bash -c "mkinitcpio -P"
-arch-chroot /mnt /bin/bash -c "systemctl enable NetworkManager.service"
+arch-chroot /mnt /bin/bash -c "systemctl enable dhcpcd NetworkManager"
 
   ;;
 
@@ -198,8 +196,7 @@ arch-chroot /mnt /bin/bash -c "pacman -S firewalld --noconfirm --needed"
 arch-chroot /mnt /bin/bash -c "pacman -S sof-tools --noconfirm --needed"
 arch-chroot /mnt /bin/bash -c "pacman -S tlp --noconfirm --needed"
 
-arch-chroot /mnt /bin/bash -c "mkinitcpio -P"
-arch-chroot /mnt /bin/bash -c "systemctl enable NetworkManager.service"
+arch-chroot /mnt /bin/bash -c "systemctl enable dhcpcd NetworkManager"
 
   ;;
 
@@ -262,8 +259,7 @@ arch-chroot /mnt /bin/bash -c "pacman -S firewalld --noconfirm --needed"
 arch-chroot /mnt /bin/bash -c "pacman -S sof-tools --noconfirm --needed"
 arch-chroot /mnt /bin/bash -c "pacman -S tlp --noconfirm --needed"
 
-arch-chroot /mnt /bin/bash -c "mkinitcpio -P"
-arch-chroot /mnt /bin/bash -c "systemctl enable NetworkManager.service"
+arch-chroot /mnt /bin/bash -c "systemctl enable dhcpcd NetworkManager"
 
   ;;
 
@@ -299,7 +295,6 @@ cat procesador
 echo ""   
 sleep 3
 arch-chroot /mnt /bin/bash -c "pacman -S intel-ucode --noconfirm"
-arch-chroot /mnt /bin/bash -c "mkinitcpio -P"
 else
 clear
 echo ""
@@ -308,7 +303,6 @@ cat procesador
 echo ""  
 sleep 3
 arch-chroot /mnt /bin/bash -c "pacman -S amd-ucode --noconfirm"
-arch-chroot /mnt /bin/bash -c "mkinitcpio -P"
 fi
 fi
 

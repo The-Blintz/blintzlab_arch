@@ -1,6 +1,5 @@
-#!/bin/sh
+#!/usr/bin/env bash
 : 'Copyright (C) 2019 Código Cristo'
-#!/bin/bash
 
 # @Bourne_Again
 # wget is.gd/arcris && sh arcris
@@ -10,6 +9,9 @@ clear
 pacman -Sy --noconfirm
 pacman -Sy 
 clear
+
+# Forzar instalación de dialog (necesario para la interfaz)
+pacman -Sy --noconfirm --needed dialog
 
 pacmaninit1=$( pacman -Ss glibc  | grep "glibc" 	| grep "installed" | wc -l )
 pacmaninit2=$( pacman -Ss dialog | grep "dialog" 	| grep "installed" | wc -l )

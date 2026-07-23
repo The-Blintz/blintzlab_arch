@@ -307,75 +307,36 @@ fi
 
 if [ "$AUDIO1" == "true" ]; then
 arch-chroot /mnt /bin/bash -c "sudo -u $username yay -S pipewire --noeditmenu --noconfirm --needed"
-arch-chroot /mnt /bin/bash -c "sudo -u $username yay -S pipewire-audio --noeditmenu --noconfirm --needed"
+arch-chroot /mnt /bin/bash -c "sudo -u $username yay -S pipewire-alsa --noeditmenu --noconfirm --needed"
 arch-chroot /mnt /bin/bash -c "sudo -u $username yay -S pipewire-pulse --noeditmenu --noconfirm --needed"
 arch-chroot /mnt /bin/bash -c "sudo -u $username yay -S pipewire-jack --noeditmenu --noconfirm --needed"
-arch-chroot /mnt /bin/bash -c "sudo -u $username yay -S wireplumber --noeditmenu --noconfirm --needed"
+arch-chroot /mnt /bin/bash -c "sudo -u $username yay -S gst-plugin-pipewire --noeditmenu --noconfirm --needed"
+arch-chroot /mnt /bin/bash -c "sudo -u $username yay -S pipewire-media-session --noeditmenu --noconfirm --needed"
+arch-chroot /mnt /bin/bash -c "sudo -u $username yay -S pipewire-zeroconf --noeditmenu --noconfirm --needed"
+arch-chroot /mnt /bin/bash -c "sudo -u $username yay -S pipewire-jack-dropin --noeditmenu --noconfirm --needed"
+arch-chroot /mnt /bin/bash -c "sudo -u $username yay -S lib32-pipewire --noeditmenu --noconfirm --needed"
+arch-chroot /mnt /bin/bash -c "sudo -u $username yay -S lib32-pipewire-jack --noeditmenu --noconfirm --needed"
 arch-chroot /mnt /bin/bash -c "sudo -u $username yay -S helvum --noeditmenu --noconfirm --needed"
-arch-chroot /mnt /bin/bash -c "sudo -u $username systemctl --user enable --now pipewire.service pipewire-pulse.service wireplumber.service"
-fi
-```
+arch-chroot /mnt /bin/bash -c "sudo -u $username systemctl start --user pipewire-pulse.service"
+arch-chroot /mnt /bin/bash -c "systemctl start pipewire-pulse.service"
+arch-chroot /mnt /bin/bash -c "systemctl start pipewire.service"
+arch-chroot /mnt /bin/bash -c "systemctl start pipewire-media-session.service"
+arch-chroot /mnt /bin/bash -c "systemctl start pipewire.service"
+arch-chroot /mnt /bin/bash -c "systemctl start pipewire-media-session.service"
 
-**Bloque 2:** Reemplazar `AUDIO2` (PulseAudio) por PipeWire.
-
-```bash
-lib/installextras
-```
-```bash
-<<<<<<< SEARCH
-if [ "$AUDIO2" == "true" ]; then
-arch-chroot /mnt /bin/bash -c "sudo -u $username yay -S pipewire --noeditmenu --noconfirm --needed"
-arch-chroot /mnt /bin/bash -c "sudo -u $username yay -S pipewire-audio --noeditmenu --noconfirm --needed"
-arch-chroot /mnt /bin/bash -c "sudo -u $username yay -S pipewire-pulse --noeditmenu --noconfirm --needed"
-arch-chroot /mnt /bin/bash -c "sudo -u $username yay -S pipewire-jack --noeditmenu --noconfirm --needed"
 arch-chroot /mnt /bin/bash -c "sudo -u $username yay -S wireplumber --noeditmenu --noconfirm --needed"
-arch-chroot /mnt /bin/bash -c "sudo -u $username yay -S pavucontrol --noeditmenu --noconfirm --needed"
-arch-chroot /mnt /bin/bash -c "sudo -u $username yay -S pamixer --noeditmenu --noconfirm --needed"
-arch-chroot /mnt /bin/bash -c "sudo -u $username systemctl --user enable --now pipewire.service pipewire-pulse.service wireplumber.service"
+
+arch-chroot /mnt /bin/bash -c "systemctl disable pipewire-media-session"
+arch-chroot /mnt /bin/bash -c "systemctl start --user wireplumber.service"
+arch-chroot /mnt /bin/bash -c "systemctl start wireplumber.service"
+arch-chroot /mnt /bin/bash -c "pactl info"
 fi
 
 
 
-if [ "$AUDIO2" == "true" ]; then
-arch-chroot /mnt /bin/bash -c "sudo -u $username yay -S pulseaudio --noeditmenu --noconfirm --needed"
-arch-chroot /mnt /bin/bash -c "sudo -u $username yay -S pulseaudio-alsa --noeditmenu --noconfirm --needed"
-arch-chroot /mnt /bin/bash -c "sudo -u $username yay -S pavucontrol --noeditmenu --noconfirm --needed"
-arch-chroot /mnt /bin/bash -c "sudo -u $username yay -S pamixer --noeditmenu --noconfirm --needed"
-arch-chroot /mnt /bin/bash -c "sudo -u $username yay -S libcanberra-pulse --noeditmenu --noconfirm --needed"
-arch-chroot /mnt /bin/bash -c "sudo -u $username yay -S libcanberra-gstreamer --noeditmenu --noconfirm --needed"
-arch-chroot /mnt /bin/bash -c "sudo -u $username yay -S lib32-alsa-plugins --noeditmenu --noconfirm --needed"
-arch-chroot /mnt /bin/bash -c "sudo -u $username yay -S lib32-libpulse --noeditmenu --noconfirm --needed"
-fi
 
 
 
-if [ "$AUDIO3" == "true" ]; then
-arch-chroot /mnt /bin/bash -c "sudo -u $username yay -S pipewire --noeditmenu --noconfirm --needed"
-arch-chroot /mnt /bin/bash -c "sudo -u $username yay -S pipewire-audio --noeditmenu --noconfirm --needed"
-arch-chroot /mnt /bin/bash -c "sudo -u $username yay -S pipewire-pulse --noeditmenu --noconfirm --needed"
-arch-chroot /mnt /bin/bash -c "sudo -u $username yay -S pipewire-jack --noeditmenu --noconfirm --needed"
-arch-chroot /mnt /bin/bash -c "sudo -u $username yay -S wireplumber --noeditmenu --noconfirm --needed"
-arch-chroot /mnt /bin/bash -c "sudo -u $username yay -S realtime-privileges --noconfirm"
-arch-chroot /mnt /bin/bash -c "sudo -u $username yay -S lv2-plugins --noconfirm"
-arch-chroot /mnt /bin/bash -c "sudo -u $username yay -S ladspa-plugins --noconfirm"
-arch-chroot /mnt /bin/bash -c "sudo -u $username yay -S dssi-plugins --noconfirm"
-arch-chroot /mnt /bin/bash -c "sudo -u $username yay -S vst-plugins --noconfirm"
-arch-chroot /mnt /bin/bash -c "sudo -u $username systemctl --user enable --now pipewire.service pipewire-pulse.service wireplumber.service"
-fi
-```
-
----
-
-### 2. `lib/installgrub` – Asegurar `os-prober`, `ntfs-3g` y `GRUB_DISABLE_OS_PROBER=false`
-
-**Bloque 4:** Agregar `ntfs-3g` y `os-prober` en la instalación de paquetes para UEFI (función `installgrub1`).
-
-```bash
-lib/installgrub
-```
-```bash
-<<<<<<< SEARCH
-arch-chroot /mnt /bin/bash -c "pacman -S grub efibootmgr os-prober --noconfirm"
 
 
 
